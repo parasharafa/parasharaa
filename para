@@ -1,0 +1,64 @@
+module CLA_8bit(
+    input [7:0] A, B,
+    input Cin,
+    output [7:0] Sum,
+    output Cout
+);
+    wire [7:0] P, G; // Propagate and Generate signals
+    wire [8:0] C;    // Carry signals
+
+    assign C[0] = Cin; // Initial carry input
+
+    // Compute Generate (G) and Propagate (P) signals
+    assign G = A & B;
+    assign P = A ^ B;
+
+    // Compute carry signals
+    assign C[1] = G[0] | (P[0] & C[0]);
+    assign C[2] = G[1] | (P[1] & C[1]);
+    assign C[3] = G[2] | (P[2] & C[2]);
+    assign C[4] = G[3] | (P[3] & C[3]);
+    assign C[5] = G[4] | (P[4] & C[4]);
+    assign C[6] = G[5] | (P[5] & C[5]);
+    assign C[7] = G[6] | (P[6] & C[6]);
+    assign C[8] = G[7] | (P[7] & C[7]);
+
+    // Compute sum
+    assign Sum = P ^ C[7:0];
+
+    // Carry out
+    assign Cout = C[8];
+
+endmodule
+
+`timescale 1ns/1ps
+
+module CLA_8bit_tb;
+    reg [7:0] A, B;
+    reg Cin;
+    wire [7:0] Sum;
+    wire Cout;
+
+    // Instantiate the CLA module
+    CLA_8bit uut (
+        .A(A),
+        .B(B),
+        .Cin(Cin),
+        .Sum(Sum),
+        .Cout(Cout)
+    );
+
+    initial begin
+        $dumpfile("waveform.vcd");
+        $dumpvars(0, CLA_8bit_tb);
+
+        // Test Cases
+        A = 8'b00011001; B = 8'b00000101; Cin = 0; #10; // 25 + 5
+        A = 8'b10101010; B = 8'b01010101; Cin = 0; #10; // Alternating bits
+        A = 8'b11110000; B = 8'b00001111; Cin = 1; #10; // Carry-in case
+        A = 8'b01111111; B = 8'b00000001; Cin = 0; #10; // Overflow case
+
+        $finish;
+    end
+endmodule
+
